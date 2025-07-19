@@ -1,7 +1,7 @@
 package com.ecommerce.constants;
 
 public  class AppConstants {
-  public static final String LOGIN_PAGE_TITLE = "Let's Shopz!";
+  public static final String LOGIN_PAGE_TITLE = "Let's Shop";
   public static final String LOGIN_PAGE_FRACTION_URL = "client/auth/login";
   public static final String HOME_PAGE_FRACTION_URL = "client/dashboard/dash";
   public static final String HOME_PAGE_TEXT = "Home | Search";
