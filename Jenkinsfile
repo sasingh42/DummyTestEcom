@@ -1,71 +1,111 @@
-pipeline{
-    
+pipeline 
+{
     agent any
     
-    stages{
-        
-        stage("build"){
-            steps{
-                echo("build the project")
+    tools{
+        maven 'maven'
+        }
+
+    stages 
+    {
+        stage('Build') 
+        {
+            steps
+            {
+                 git 'https://github.com/jglick/simple-maven-project-with-tests.git'
+                 bat "mvn -Dmaven.test.failure.ignore=true clean package"
+            }
+            post 
+            {
+                success
+                {
+                    junit '**/target/surefire-reports/TEST-*.xml'
+                    archiveArtifacts 'target/*.jar'
+                }
             }
         }
         
         
-        stage("Run Unit test"){
-            steps{
-                echo("run UTs")
-            }
-        }
-        
-        stage("Run Integration test"){
-            steps{
-                echo("run ITs")
-            }
-        }
-        
-        stage("Deploy to dev"){
-            steps{
-                echo("deploy to dev")
-            }
-        }
         
         stage("Deploy to QA"){
             steps{
-                echo("deploy to QA")
+                echo("deploy to qa done")
             }
         }
         
         
         
-        stage("Run regression test cases on QA"){
+                
+        stage('Regression Automation Tests') {
+            steps {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                    git 'https://github.com/sasingh42/DummyTestEcom'                    
+                    bat "mvn clean test -Dsurefire.suiteXmlFiles=src/test/resource/testrunners/testng.xml -Denv=qa"
+                    
+                    
+                   
+                }
+            }
+        }
+                
+     
+        stage('Publish Allure Reports') {
+           steps {
+                script {
+                    allure([
+                        includeProperties: false,
+                        jdk: '',
+                        properties: [],
+                        reportBuildPolicy: 'ALWAYS',
+                        results: [[path: '/allure-results']]
+                    ])
+                }
+            }
+        }
+        
+//        
+//        stage('Publish ChainTest Report'){
+//            steps{
+//                     publishHTML([allowMissing: false,
+//                                  alwaysLinkToLastBuild: false, 
+//                                  keepAll: true, 
+//                                  reportDir: 'target/chaintest', 
+//                                  reportFiles: 'Index.html', 
+//                                  reportName: 'HTML Regression ChainTest Report', 
+//                                  reportTitles: ''])
+//            }
+//        } 
+//        
+        stage("Deploy to Stage"){
             steps{
-                echo("Run test cases on QA")
+                echo("deploy to Stage")
             }
         }
         
-        stage("Deploy to stage"){
-            steps{
-                echo("deploy to stage")
+        stage('Sanity Automation Test') {
+            steps {
+                catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                   git 'https://github.com/sasingh42/DummyTestEcom'                    
+                    bat "mvn clean test -Dsurefire.suiteXmlFiles=src/test/resource/testrunners/testng.xml -Denv=stage"
+                    
+                }
             }
         }
         
-        stage("Run sanity test cases on Stage"){
-            steps{
-                echo("Run sanity test cases on Stage")
-            }
-        }
-
-        stage("Deploy to uat"){
-            steps{
-                echo("deploy to stage")
-            }
-        }
         
-        stage("Run sanity test cases on uat"){
-            steps{
-                echo("Run sanity test cases on UAT")
-            }
-        }
+        
+//        stage('Publish sanity ChainTest Report'){
+//            steps{
+//                     publishHTML([allowMissing: false,
+//                                  alwaysLinkToLastBuild: false, 
+//                                  keepAll: true, 
+//                                  reportDir: 'target/chaintest', 
+//                                  reportFiles: 'Index.html', 
+//                                  reportName: 'HTML Sanity ChainTest Report', 
+//                                  reportTitles: ''])
+//            }
+//        }
+        
         
         stage("Deploy to PROD"){
             steps{
@@ -74,8 +114,5 @@ pipeline{
         }
         
         
-        
     }
-    
-    
 }
